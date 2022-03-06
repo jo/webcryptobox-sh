@@ -30,24 +30,26 @@ case $CMD in
     openssl pkey -in - -pubout
     ;;
 
-  sha1-fingerprint-from-private-key)
-    openssl pkey -in - -pubout -outform DER | openssl sha1
+  sha1-fingerprint)
+    pem="$(cat)"
+    pubin=""
+    if echo "$pem" | grep PUBLIC > /dev/null; then
+      pubin="-pubin"
+    fi
+    echo "$pem" | openssl pkey $pubin -in - -pubout -outform DER | openssl sha1
     ;;
 
-  sha1-fingerprint-from-public-key)
-    openssl pkey -pubin -in - -pubout -outform DER | openssl sha1
-    ;;
-
-  sha256-fingerprint-from-private-key)
-    openssl pkey -in - -pubout -outform DER | openssl sha256
-    ;;
-
-  sha256-fingerprint-from-public-key)
-    openssl pkey -pubin -in - -pubout -outform DER | openssl sha256
+  sha256-fingerprint)
+    pem="$(cat)"
+    pubin=""
+    if echo "$pem" | grep PUBLIC > /dev/null; then
+      pubin="-pubin"
+    fi
+    echo "$pem" | openssl pkey $pubin -in - -pubout -outform DER | openssl sha256
     ;;
 
   derive-key)
-    openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 | xxd -p -c$BYTES
+    openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES
     ;;
 
   generate-key)
@@ -62,12 +64,12 @@ case $CMD in
     openssl enc -nosalt -$CIPHER -in - -base64 -K $ARG1 -iv $ARG2
     ;;
 
-  derive-and-encrypt)
-    openssl enc -nosalt -$CIPHER -in - -base64 -K `openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES` -iv $ARG3
-    ;;
-
   decrypt)
     openssl enc -nosalt -$CIPHER -d -in - -base64 -K $ARG1 -iv $ARG2
+    ;;
+
+  derive-and-encrypt)
+    openssl enc -nosalt -$CIPHER -in - -base64 -K `openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES` -iv $ARG3
     ;;
 
   derive-and-decrypt)
