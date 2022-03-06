@@ -8,12 +8,12 @@ Compatible with the [JavaScript Webcryptobox](https://github.com/jo/webcryptobox
 Note that `GCM` is not supported by the usual OpenSSL installation, though.
 
 ## Requirements
-This script uses the following programs:
+This script relies the following packages:
 
 * OpenSSL
-* cat
-* grep
-* xxd
+* cat, grep and xxd
+
+Make sure they're installed on your system and globally callable.
 
 ## Configuration
 Cipher selection is done via environment variables:
