@@ -90,7 +90,9 @@ Qk+/3rLwfdO3/zzWj6A=
 Derives AES key from private and public key and output as hex string:
 
 ```sh
-./webcryptobox.sh derive-key my-private-key.pem her-public-key.pem
+./webcryptobox.sh derive-key \
+  my-private-key.pem \
+  her-public-key.pem
 0034465e46272dc8c074a9ec34372119533cd2d546d08d0e2c48a90baa44e6d2
 ```
 
@@ -115,7 +117,9 @@ Takes data from `STDIN`, encrypts it and outputs the encrypted data as base64:
 
 ```sh
 $ echo "my secret message" \
-  | ./webcryptobox.sh encrypt 6eb01eadcaf825a21a22ce6fc2587f0350c22e09a3108803005ab8eacd19a76d 8830eb285d6903307aa8fd0ab3b9b389
+  | ./webcryptobox.sh encrypt \
+    6eb01eadcaf825a21a22ce6fc2587f0350c22e09a3108803005ab8eacd19a76d \
+    8830eb285d6903307aa8fd0ab3b9b389
 CL0rvTbRrygW5Y5pGOKjqr885/G1FPkszuZkHlIg9mg=
 ```
 
@@ -124,7 +128,9 @@ Takes encrypted data as base64 via `STDIN` and decrypts the message:
 
 ```sh
 $ echo "CL0rvTbRrygW5Y5pGOKjqr885/G1FPkszuZkHlIg9mg=" \
-  | ./webcryptobox.sh decrypt 6eb01eadcaf825a21a22ce6fc2587f0350c22e09a3108803005ab8eacd19a76d 8830eb285d6903307aa8fd0ab3b9b389
+  | ./webcryptobox.sh decrypt \
+    6eb01eadcaf825a21a22ce6fc2587f0350c22e09a3108803005ab8eacd19a76d \
+    8830eb285d6903307aa8fd0ab3b9b389
 my secret message
 ```
 
@@ -133,7 +139,10 @@ Derives a shared key from private key and peer key and encrypts the data from `S
 
 ```sh
 $ echo "my secret message" \
-  | ./webcryptobox.sh derive-and-encrypt private-key.pem her-public-key.pem 74dcbe5d1af04b99d389786f551e276d
+  | ./webcryptobox.sh derive-and-encrypt \
+    private-key.pem \
+    her-public-key.pem \
+    74dcbe5d1af04b99d389786f551e276d
 FeD8WcdY2SqvS3HuxHesfkgHx4beOweNLI4Bbxy4k88=
 ```
 
@@ -142,7 +151,10 @@ Derives a shared key from private key and peer key and decrypts the base64 encod
 
 ```sh
 $ echo "FeD8WcdY2SqvS3HuxHesfkgHx4beOweNLI4Bbxy4k88=" \
-  | ./webcryptobox.sh derive-and-decrypt private-key.pem her-public-key.pem 74dcbe5d1af04b99d389786f551e276d
+  | ./webcryptobox.sh derive-and-decrypt \
+    private-key.pem \
+    her-public-key.pem \
+    74dcbe5d1af04b99d389786f551e276d
 my secret message
 ```
 
