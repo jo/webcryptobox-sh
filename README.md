@@ -100,7 +100,7 @@ Qk+/3rLwfdO3/zzWj6A=
 (stdin)= f929e62b67a316d29f89fcb7eb4d88df00afb9d7725b66b8896c114d31f5e237
 ```
 
-### `derive-key <private key pem file> <peer public key pem file>`
+### `derive-key <private key> <peer pkey>`
 Derives AES key from private and public key and output as hex string:
 
 ```sh
@@ -126,8 +126,8 @@ $ ./webcryptobox.sh generate-iv
 8830eb285d6903307aa8fd0ab3b9b389
 ```
 
-### `encrypt <key hex string> <iv hex string>`
-Takes data from `STDIN`, encrypts it and outputs the encrypted data as base64:
+### `encrypt <key> <iv>`
+Takes data from `STDIN` and `key` as well as `iv` as hex string from arguments, encrypts it and outputs the encrypted data as base64:
 
 ```sh
 $ echo "my secret message" \
@@ -137,8 +137,8 @@ $ echo "my secret message" \
 CL0rvTbRrygW5Y5pGOKjqr885/G1FPkszuZkHlIg9mg=
 ```
 
-### `decrypt <key hex string> <iv hex string>`
-Takes encrypted data as base64 via `STDIN` and decrypts the message:
+### `decrypt <key> <iv>`
+Takes encrypted data as base64 via `STDIN` and `key` as well as `iv` as hex string from arguments and decrypts the message:
 
 ```sh
 $ echo "CL0rvTbRrygW5Y5pGOKjqr885/G1FPkszuZkHlIg9mg=" \
@@ -148,8 +148,8 @@ $ echo "CL0rvTbRrygW5Y5pGOKjqr885/G1FPkszuZkHlIg9mg=" \
 my secret message
 ```
 
-### `derive-and-encrypt <private key pem file> <peer public key pem file> <iv hex string>`
-Derives a shared key from private key and peer key and encrypts the data from `STDIN` and outputs base64:
+### `derive-and-encrypt <private key> <peer key> <iv>`
+Derives a shared key from private key and peer key pem files and `iv` hex string from arguments and encrypts the data from `STDIN` and outputs base64:
 
 ```sh
 $ echo "my secret message" \
@@ -160,8 +160,8 @@ $ echo "my secret message" \
 FeD8WcdY2SqvS3HuxHesfkgHx4beOweNLI4Bbxy4k88=
 ```
 
-### `derive-and-decrypt <private key pem file> <peer public key pem file> <iv hex string>`
-Derives a shared key from private key and peer key and decrypts the base64 encoded data from `STDIN` and outputs the message:
+### `derive-and-decrypt <private key> <peer pkey> <iv>`
+Derives a shared key from private key and peer key pem files and `iv` hex string from arguments and decrypts the base64 encoded data from `STDIN` and outputs the message:
 
 ```sh
 $ echo "FeD8WcdY2SqvS3HuxHesfkgHx4beOweNLI4Bbxy4k88=" \
