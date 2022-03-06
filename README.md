@@ -100,7 +100,7 @@ Qk+/3rLwfdO3/zzWj6A=
 (stdin)= f929e62b67a316d29f89fcb7eb4d88df00afb9d7725b66b8896c114d31f5e237
 ```
 
-### `derive-key <private key> <peer pkey>`
+### `derive-key <private key> <peer key>`
 Derives AES key from private and public key and output as hex string:
 
 ```sh
@@ -160,7 +160,7 @@ $ echo "my secret message" \
 FeD8WcdY2SqvS3HuxHesfkgHx4beOweNLI4Bbxy4k88=
 ```
 
-### `derive-and-decrypt <private key> <peer pkey> <iv>`
+### `derive-and-decrypt <private key> <peer key> <iv>`
 Derives a shared key from private key and peer key pem files and `iv` hex string from arguments and decrypts the base64 encoded data from `STDIN` and outputs the message:
 
 ```sh
