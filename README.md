@@ -18,8 +18,13 @@ Make sure they're installed on your system and globally callable.
 ## Configuration
 Cipher selection is done via environment variables:
 
-* `CURVE`: ecdh curve name. Can be `prime256v1` (aka `P-256`), `secp384r1` (aka `P-384`) or `secp521r1` (aka `P-521`, the default)
-* `LENGTH`: AES key length in bits. Can be either `128` or `256` (default)
+* `CURVE`: ecdh curve name. Can be
+  - `prime256v1` (aka `P-256`)
+  - `secp384r1` (aka `P-384`)
+  - `secp521r1` (aka `P-521`, the default)
+* `LENGTH`: AES key length in bits. Can be
+  - `128`
+  - `256` (default)
 
 ## Usage
 Most operations operate on `STDIN` and `STDOUT`.
