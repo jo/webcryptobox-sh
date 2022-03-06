@@ -1,9 +1,11 @@
 # Webcryptobox
 WebCrypto compatible encryption with Bash and OpenSSL.
 
-This little script shows how to do WebCrypto compatible encryption using the OpenSSL CLI. It's compatible to the [JavaScript Webcryptobox](https://github.com/jo/webcryptobox-js).
+This little script shows how to do WebCrypto compatible encryption using the OpenSSL CLI.
 
-Note that `GCM` is not supported by the usual OpenSSL installation, thought.
+Compatible with the [JavaScript Webcryptobox](https://github.com/jo/webcryptobox-js).
+
+Note that `GCM` is not supported by the usual OpenSSL installation, though.
 
 ## Requirements
 This script uses the following programs:
