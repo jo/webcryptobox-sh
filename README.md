@@ -26,6 +26,13 @@ Cipher selection is done via environment variables:
   - `128`
   - `256` (default)
 
+Eg:
+
+```sh
+$ CURVE=prime256v1 ./webcryptobox.sh generate-key-pair
+$ LENGTH=128 ./webcryptobox.sh generate-key
+```
+
 ## Usage
 Most operations operate on `STDIN` and `STDOUT`.
 
