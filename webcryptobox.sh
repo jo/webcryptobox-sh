@@ -1,82 +1,159 @@
 #!/usr/bin/env bash
+
+# WebCrypto compatible cryptography library
+# Version: 2.0.0
+
 set -eo pipefail
 
-# set the curve name via `CURVE` environment variable. Can be
-# * `prime256v1` also known as P-256
-# * `secp384r1` also know as P-384
-# * `secp521r1` (default) aka P-521
-: "${CURVE:=secp521r1}"
+# cipher config
+CURVE=secp521r1
+KEY_LENGTH=256
+CIPHER=aes-${KEY_LENGTH}-cbc
+IV_BYTES_LENGTH=16
+ITERATIONS=64000
+PASSPHRASE_LENGTH=32
 
-# set the key length via `LENGTH` environment variable. Can be
-# * `128`
-# * `256` (default)
-: "${LENGTH:=256}"
 
-CIPHER="aes-$LENGTH-cbc"
-BYTES=`expr $LENGTH / 8`
-IVLENGTH=16
+KEY_BYTES_LENGTH=$( expr ${KEY_LENGTH} / 8 )
 
-CMD=$1
-ARG1=$2
-ARG2=$3
-ARG3=$4
 
-case $CMD in
-  generate-key-pair)
-    openssl ecparam -genkey -name $CURVE -noout | openssl pkey -in  -
-    ;;
+key () {
+  openssl rand -hex ${KEY_BYTES_LENGTH}
+}
 
-  derive-public-key)
-    openssl pkey -in - -pubout
-    ;;
 
-  sha1-fingerprint)
-    pem="$(cat)"
-    pubin=""
-    if echo "$pem" | grep PUBLIC > /dev/null; then
-      pubin="-pubin"
-    fi
-    echo "$pem" | openssl pkey $pubin -in - -pubout -outform DER | openssl sha1
-    ;;
+encrypt () {
+  key="${1}"
+  filename="${2}"
+  
+  iv=$( openssl rand -hex ${IV_BYTES_LENGTH} )
+  {
+    ( echo -n "${iv}" | xxd -r -p ) &
+    ( cat "${filename}" | openssl enc -nosalt -${CIPHER} -in - -K "${key}" -iv "${iv}" );
+  } \
+    | openssl base64
+}
 
-  sha256-fingerprint)
-    pem="$(cat)"
-    pubin=""
-    if echo "$pem" | grep PUBLIC > /dev/null; then
-      pubin="-pubin"
-    fi
-    echo "$pem" | openssl pkey $pubin -in - -pubout -outform DER | openssl sha256
-    ;;
+decrypt () {
+  key="${1}"
+  filename="${2}"
 
-  derive-key)
-    openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES
-    ;;
+  tmpfile=$( mktemp /tmp/wcb.XXXXXX )
+  exec 3> "${tmpfile}"
+  exec 4< "${tmpfile}"
+  exec 5< "${tmpfile}"
+  
+  cat "${filename}" \
+    | openssl base64 -d \
+    >&3
 
-  generate-key)
-    openssl rand -hex $BYTES
-    ;;
+  iv=$( cat <&4 | xxd -p -l ${IV_BYTES_LENGTH} )
 
-  generate-iv)
-    openssl rand -hex $IVLENGTH
-    ;;
+  cat <&5 \
+    | xxd -p -s ${IV_BYTES_LENGTH} \
+    | xxd -r -p \
+    | openssl enc -nosalt -${CIPHER} -d -in - -K "${key}" -iv "${iv}"
 
-  encrypt)
-    openssl enc -nosalt -$CIPHER -in - -base64 -K $ARG1 -iv $ARG2
-    ;;
+  rm "${tmpfile}"
+  exec 3>&-
+}
 
-  decrypt)
-    openssl enc -nosalt -$CIPHER -d -in - -base64 -K $ARG1 -iv $ARG2
-    ;;
 
-  derive-and-encrypt)
-    openssl enc -nosalt -$CIPHER -in - -base64 -K `openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES` -iv $ARG3
-    ;;
+private_key () {
+  openssl ecparam -genkey -name ${CURVE} -noout \
+    | openssl pkey -in -
+}
 
-  derive-and-decrypt)
-    openssl enc -nosalt -$CIPHER -d -in - -base64 -K `openssl pkeyutl -derive -inkey $ARG1 -peerkey $ARG2 -kdflen $BYTES | xxd -p -c $BYTES` -iv $ARG3
-    ;;
+public_key () {
+  filename="${1}"
+  openssl pkey -in "${filename}" -pubout
+}
 
-  *)
-    echo "unsupported command: '$CMD'"
-    ;;
-esac
+fingerprint () {
+  filename="${1}"
+  hashfunction="${2}"
+  
+  pubin=""
+  if grep PUBLIC "${filename}" > /dev/null; then
+    pubin="-pubin"
+  fi
+  
+  cat "${filename}" \
+    | openssl pkey ${pubin} -in - -pubout -outform DER \
+    | openssl "${hashfunction}"
+}
+
+derive_key () {
+  private_key="${1}"
+  public_key="${2}"
+
+  openssl pkeyutl -derive -kdflen ${KEY_BYTES_LENGTH} \
+    -inkey "${private_key}" -peerkey "${public_key}" \
+    | xxd -p -l ${KEY_BYTES_LENGTH} -c ${KEY_BYTES_LENGTH}
+}
+
+derive_password () {
+  private_key="${1}"
+  public_key="${2}"
+  length="${3}"
+
+  total_bytes_length=$( expr "${length}" + ${KEY_BYTES_LENGTH} )
+  openssl pkeyutl -derive -kdflen "${total_bytes_length}" \
+    -inkey "${private_key}" -peerkey "${public_key}" \
+    | xxd -p -s ${KEY_BYTES_LENGTH} -l "${length}" -c "${length}"
+}
+
+
+encrypt_private_key () {
+  passphrase="${1}"
+  filename="${2}"
+
+  PASSPHRASE="${passphrase}" \
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -iter ${ITERATIONS} -v2 ${CIPHER} -passout env:PASSPHRASE -in "${filename}"
+}
+
+decrypt_private_key () {
+  passphrase="${1}"
+  filename="${2}"
+
+  PASSPHRASE="${passphrase}" \
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -passin env:PASSPHRASE -in "${filename}" --nocrypt
+}
+
+
+encrypt_private_key_to () {
+  private_key="${1}"
+  public_key="${2}"
+  filename="${3}"
+
+  passphrase=$( derive_password "${private_key}" "${public_key}" ${PASSPHRASE_LENGTH} )
+  encrypt_private_key "${passphrase}" "${filename}"
+}
+
+decrypt_private_key_from () {
+  private_key="${1}"
+  public_key="${2}"
+  filename="${3}"
+
+  passphrase=$( derive_password "${private_key}" "${public_key}" ${PASSPHRASE_LENGTH} )
+  decrypt_private_key "${passphrase}" "${filename}"
+}
+
+
+encrypt_to () {
+  private_key="${1}"
+  public_key="${2}"
+  filename="${3}"
+
+  key=$( derive_key "${private_key}" "${public_key}" )
+  encrypt "${key}" "${filename}"
+}
+
+decrypt_from () {
+  private_key="${1}"
+  public_key="${2}"
+  filename="${3}"
+
+  key=$( derive_key "${private_key}" "${public_key}" )
+  decrypt "${key}" "${filename}"
+}
