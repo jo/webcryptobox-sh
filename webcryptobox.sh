@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # WebCrypto compatible cryptography library
-# Version: 2.0.0
+# Version: 3.0.0
 
 set -eo pipefail
 
@@ -30,8 +30,7 @@ encrypt () {
   {
     ( echo -n "${iv}" | xxd -r -p ) &
     ( cat "${filename}" | openssl enc -nosalt -${CIPHER} -in - -K "${key}" -iv "${iv}" );
-  } \
-    | openssl base64
+  }
 }
 
 decrypt () {
@@ -44,7 +43,6 @@ decrypt () {
   exec 5< "${tmpfile}"
   
   cat "${filename}" \
-    | openssl base64 -d \
     >&3
 
   iv=$( cat <&4 | xxd -p -l ${IV_BYTES_LENGTH} )
